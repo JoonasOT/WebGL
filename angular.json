@@ -17,6 +17,9 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "define": {
+              "process.env.PORT":"8080"
+            },
             "outputPath": "dist/web-gl",
             "index": "src/index.html",
             "browser": "src/main.ts",
