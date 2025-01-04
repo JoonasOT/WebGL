@@ -1,0 +1,37 @@
+header {
+    display: flex;
+    padding-inline: 16px;
+    padding-block: 8px;
+    background-color: black;
+    color: azure;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+
+    nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        > span {
+            cursor: pointer;
+            &:hover {
+                color: gray;
+            }
+        }
+
+        ul {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none;
+
+            li {
+                cursor: pointer;
+                &:hover {
+                    color: gray;
+                }
+            }
+        }
+    }
+}
