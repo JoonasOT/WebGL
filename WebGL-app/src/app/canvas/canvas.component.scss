@@ -1,3 +1,9 @@
-#main_canvas {
-    border: 1px solid black;
+.webgl_container {
+    display: flex;
+    justify-content: space-between;
+    
+    &>div, &>canvas {
+        margin: 20px;
+        border: 1px solid black;
+    }
 }

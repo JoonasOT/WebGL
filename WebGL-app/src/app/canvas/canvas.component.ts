@@ -10,114 +10,113 @@ export class CanvasComponent {
   @ViewChild("mainCanvas")
   canvas!: ElementRef<HTMLCanvasElement>;
 
-  vertexShader: string = `
-    attribute vec2 coordinates;
+  @ViewChild("vertexShader")
+  vertexS!: ElementRef<HTMLParagraphElement>;
 
-    void main(void) {
-      gl_Position = vec4(coordinates, 0.0, 1.0);
+  vertexShader: string = `
+    attribute vec2 position;
+
+    void main() {
+      gl_Position = vec4(position, 0.0, 1.0);
     }
   `;
+
+  @ViewChild("fragmentShader")
+  fragmentS!: ElementRef<HTMLParagraphElement>;
 
   fragmentShader: string = `
-    void main(void) {
-      gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+    precision highp float;
+
+    void main() {
+      vec2 col = gl_FragCoord.xy / 500.0;
+      col -= 0.5;
+      float d = length(col);
+      d = sqrt(d);
+      gl_FragColor = vec4(d, d, d, 1.0 );
     }
   `;
 
+
+
   ngAfterViewInit() {
+    this.vertexS.nativeElement.innerText = this.vertexShader;
+    this.fragmentS.nativeElement.innerText = this.fragmentShader;
+
     if (this.canvas.nativeElement === null) throw new Error("Could not find canvas element");
     const gl = this.canvas?.nativeElement.getContext("webgl");
     if (gl === null) throw new Error("Could not get WebGL context");
 
-    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    // Creation of vertex shader
+    const vertexShader = this.loadShader(gl, gl.VERTEX_SHADER, this.vertexShader);
 
-    if (vertexShader === null)
-      throw new Error("Could not establish vertex shader"); // handle possibility of null
+    // Creation of fragment shader
+    const fragmentShader = this.loadShader(gl, gl.FRAGMENT_SHADER, this.fragmentShader);
 
-    // Step 2: Write the vertex shader code
-    const vertexShaderCode = this.vertexShader;
-
-    // Step 3: Attach the shader code to the vertex shader
-    gl.shaderSource(vertexShader, vertexShaderCode);
-
-    // Step 4: Compile the vertex shader
-    gl.compileShader(vertexShader);
-
-    // Step 1: Create a fragment shader object
-    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    if (fragmentShader === null)
-      throw new Error("Could not establish fragment shader"); // handle possibility of null
-
-    // Step 2: Write the fragment shader code
-    const fragmentShaderCode = this.fragmentShader;
-
-    // Step 3: Attach the shader code to the fragment shader
-    gl.shaderSource(fragmentShader, fragmentShaderCode);
-
-    // Step 4: Compile the fragment shader
-    gl.compileShader(fragmentShader);
-
-    // Step 1: Create a WebGL program instance
+    // Create a WebGL program
     const shaderProgram = gl.createProgram();
     if (shaderProgram === null) throw new Error("Could not create shader program");
 
-    // Step 2: Attach the vertex and fragment shaders to the program
+    // Attach shaders to the program
     gl.attachShader(shaderProgram, vertexShader);
     gl.attachShader(shaderProgram, fragmentShader);
     gl.linkProgram(shaderProgram);
 
-    // Step 3: Activate the program as part of the rendering pipeline
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+      gl.deleteProgram(shaderProgram);
+      throw new Error(
+        `Unable to initialize the shader program: ${gl.getProgramInfoLog(
+          shaderProgram,
+        )}`,
+      );
+    }
+
+    // Activate the program as part of the rendering pipeline
     gl.useProgram(shaderProgram);
 
-    // Step 1: Initialize the array of vertices for our triangle
+    // Vertices for our square
     const vertices = new Float32Array([
-      -0.75,  0.75,
-      -0.75, -0.75,
-       0.75, -0.75,
-       0.75,  0.75,
+      -0.75,  0.75, // Top left
+      -0.75, -0.75, // Bottom left
+       0.75, -0.75, // Bottom right
+       0.75,  0.75, // Top right
     ]);
 
+
+    // Verticies must be counter clockwise for visibility!
     const indices = new Uint16Array([
-      // Triangle 1
+      // Triangle 1 -- Top left, Bottom left, Bottom right
       0, 1, 2,
-      
-      // Triangle 2
+
+      // Triangle 2 -- Top left, Bottom right, Top right
       0, 2, 3
     ]);
 
-    // Step 2: Create a new buffer object
+    // Create vertex buffer and bind it to gl
     const vertex_buffer = gl.createBuffer();
-
-    // Step 3: Bind the object to `gl.ARRAY_BUFFER`
     gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
-
-    // Step 4: Pass the array of vertices to `gl.ARRAY_BUFFER
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-    // Step 1: Create a new buffer object
+    // Create index buffer and bind it to gl
     const index_buffer = gl.createBuffer();
-
-    // Step 2: Bind the buffer object to `gl.ELEMENT_ARRAY_BUFFER`
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-
-    // Step 3: Pass the buffer data to `gl.ELEMENT_ARRAY_BUFFER`
     gl.bufferData(
       gl.ELEMENT_ARRAY_BUFFER,
       indices,
       gl.STATIC_DRAW
     );
 
-    // Step 5: Get the location of the `coordinates` attribute of the vertex shader
-    const coordinates = gl.getAttribLocation(shaderProgram, "coordinates");
-    gl.vertexAttribPointer(coordinates, 2, gl.FLOAT, false, 0, 0);
+    // Get the location of the `coordinates` attribute of the vertex shader
+    const position = gl.getAttribLocation(shaderProgram, "position");
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
     // Step 6: Enable the attribute to receive vertices from the vertex buffer
-    gl.enableVertexAttribArray(coordinates);
+    gl.enableVertexAttribArray(position);
 
     // Step 1: Set the viewport for WebGL in the canvas
     gl.viewport(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
 
     // Step 2: Clear the canvas with gray color
+    gl.enable( gl.DEPTH_TEST );
     gl.clearColor(1.0, 1.0, 1.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -125,7 +124,16 @@ export class CanvasComponent {
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
   }
 
-  constructor() {
-    
+  private loadShader(gl: WebGLRenderingContext, type: GLenum, source: string): WebGLShader {
+    const shader = gl.createShader(type);
+    if (shader === null) throw new Error("Could not create shader program");
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      gl.deleteShader(shader);
+      throw new Error(`Could not compile ${type} shader: ${gl.getShaderInfoLog(shader)}`);
+    }
+    return shader;
   }
 }
