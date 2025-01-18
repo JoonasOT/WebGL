@@ -6,17 +6,17 @@ header {
     color: azure;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
+    width: auto;
 
     nav {
         display: flex;
         justify-content: space-between;
         align-items: center;
         
-        > span {
+        &>span, &>ul>li {
             cursor: pointer;
             &:hover {
-                color: gray;
+                color: darkgray;
             }
         }
 
@@ -25,12 +25,9 @@ header {
             justify-content: space-between;
             align-items: center;
             list-style: none;
-
-            li {
-                cursor: pointer;
-                &:hover {
-                    color: gray;
-                }
+            
+            > li {
+                margin-left: 10px;
             }
         }
     }
