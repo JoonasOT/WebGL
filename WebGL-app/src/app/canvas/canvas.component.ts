@@ -1,5 +1,6 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 
+
 @Component({
   selector: 'app-canvas',
   imports: [],
@@ -11,36 +12,42 @@ export class CanvasComponent {
   canvas!: ElementRef<HTMLCanvasElement>;
 
   @ViewChild("vertexShader")
-  vertexS!: ElementRef<HTMLParagraphElement>;
+  vertexS!: ElementRef<HTMLTextAreaElement>;
 
   vertexShader: string = `
-    attribute vec2 position;
+attribute vec2 position;
 
-    void main() {
-      gl_Position = vec4(position, 0.0, 1.0);
-    }
-  `;
+void main() {
+  gl_Position = vec4(position, 0.0, 1.0);
+}`;
 
   @ViewChild("fragmentShader")
-  fragmentS!: ElementRef<HTMLParagraphElement>;
+  fragmentS!: ElementRef<HTMLTextAreaElement>;
 
   fragmentShader: string = `
-    precision highp float;
+precision highp float;
 
-    void main() {
-      vec2 col = gl_FragCoord.xy / 500.0;
-      col -= 0.5;
-      float d = length(col);
-      d = sqrt(d);
-      gl_FragColor = vec4(d, d, d, 1.0 );
-    }
-  `;
+void main() {
+  vec2 col = gl_FragCoord.xy / 500.0;
+  col -= 0.5;
 
+  float d = length(sin(20.0 * col));
+  d = 1.0/(exp(d));
+
+  d = 4.0 * (d - pow(d, 2.0));
+
+  d = pow(d, 4.0);
+  // d = 1.0 / (1.0 + exp(-10 * (d - 0.5)));
+
+  col = abs(sin(10.0 * col) * d);
+
+  gl_FragColor = vec4(col, length(col), 1.0 );
+}`;
 
 
   ngAfterViewInit() {
-    this.vertexS.nativeElement.innerText = this.vertexShader;
-    this.fragmentS.nativeElement.innerText = this.fragmentShader;
+    this.vertexS.nativeElement.innerHTML = this.vertexShader;
+    this.fragmentS.nativeElement.innerHTML = this.fragmentShader;
 
     if (this.canvas.nativeElement === null) throw new Error("Could not find canvas element");
     const gl = this.canvas?.nativeElement.getContext("webgl");
@@ -75,10 +82,10 @@ export class CanvasComponent {
 
     // Vertices for our square
     const vertices = new Float32Array([
-      -0.75,  0.75, // Top left
-      -0.75, -0.75, // Bottom left
-       0.75, -0.75, // Bottom right
-       0.75,  0.75, // Top right
+      -1.0,  1.0, // Top left
+      -1.0, -1.0, // Bottom left
+       1.0, -1.0, // Bottom right
+       1.0,  1.0, // Top right
     ]);
 
 

@@ -5,5 +5,16 @@
     &>div, &>canvas {
         margin: 20px;
         border: 1px solid black;
+        width: 500px;
+
+        &>textarea {
+            columns: 80;
+            height: 85%;
+            width: 99%;
+        }
+    }
+
+    &>div {
+        padding: 20px;
     }
 }
